@@ -5,10 +5,12 @@ Version: 0.1.0
 Author: person("Young-geun", "Kim", email = "dudrmshub@gmail.com", role = c("aut", "cre"))
 Maintainer: Young-geun Kim <dudrms33@g.skku.edu>
 Description: Nonparametric ways to estimate conditional value at risk (expected shortfall),
-    and conditional expected shortfall
+    and conditional expected shortfall.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.0.1
 Imports: 
     magrittr
+Suggests: 
+    covr

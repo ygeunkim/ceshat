@@ -1,0 +1,21 @@
+---
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment = "#>",
+  collapse = TRUE,
+  out.width = "70%",
+  fig.align = "center",
+  fig.width = 6,
+  fig.asp = .618
+  )
+options(digits = 3)
+pander::panderOptions("round", 3)
+```
+
+# `ceshat`
+
+[![Build Status](https://travis-ci.org/ygeunkim/ceshat.svg?branch=master)](https://travis-ci.org/ygeunkim/ceshat)
+[![Codecov test coverage](https://codecov.io/gh/ygeunkim/ceshat/branch/master/graph/badge.svg)](https://codecov.io/gh/ygeunkim/ceshat?branch=master)
