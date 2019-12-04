@@ -10,8 +10,8 @@ test_that(
         y ~ x,
         data = X,
         newdata = newX,
-        nw_kernel = kernel_gauss, nw_h = 1,
-        pdf_kernel = kernel_gauss, h0 = 1
+        nw_kernel = "Gaussian", nw_h = 1,
+        pdf_kernel = "Gaussian", h0 = 1
       )
     expect_type(fhat, "double")
     expect_length(fhat, 2)

@@ -22,10 +22,15 @@
 #' @import dplyr
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @export
-wdkll_pdf <- function(formula, data, newdata = NULL, nw_kernel, nw_h, pdf_kernel, h0, init = 0, eps = 1e-5, iter = 1000) {
+wdkll_pdf <- function(formula, data, newdata = NULL,
+                      nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
+                      pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
+                      init = 0, eps = 1e-5, iter = 1000) {
   var_name <- find_name(formula)
   yt <- data %>% select(var_name[1]) %>% pull()
   xt <- data %>% select(var_name[2]) %>% pull()
+  nw_kernel <- match.arg(nw_kernel)
+  pdf_kernel <- match.arg(pdf_kernel)
   if (is.null(newdata)) newdata <- data
   if (!is.numeric(newdata)) {
     newy <- newdata %>% select(var_name[1]) %>% pull()
@@ -45,12 +50,12 @@ wdkll_pdf <- function(formula, data, newdata = NULL, nw_kernel, nw_h, pdf_kernel
 
 emp_log <- function(lambda, xt, x, Kh, h) {
   # log-pdf
-  log(1 + lambda * (xt - x) * Kh(x - xt, h))
+  log(1 + lambda * (xt - x) * compute_kernel(x - xt, Kh, h))
 }
 
 deriv_log <- function(lambda, xt, x, Kh, h) {
   # derivative of each log-pdf
-  (xt - x) * Kh(x - xt, h) / (1 + lambda * (xt - x) * Kh(x - xt, h))
+  (xt - x) * compute_kernel(x - xt, Kh, h) / (1 + lambda * (xt - x) * compute_kernel(x - xt, Kh, h))
 }
 
 deriv2_log <- function(lambda, xt, x, Kh, h) {
@@ -72,7 +77,7 @@ find_weight <- function(xdata, x, Kh, h, init_lambda = 0, eps = 1e-5, max_iter =
     init_lambda <- lambda
   }
   # pt = 1 / (n * (1 + lambda * (xt - x) * Kh))
-  1 / (length(xdata) * (1 + lambda * (xdata - x) * Kh(x - xdata, h)))
+  1 / (length(xdata) * (1 + lambda * (xdata - x) * compute_kernel(x - xdata, Kh, h)))
 }
 
 find_name <- function(formula) {
@@ -83,12 +88,11 @@ find_name <- function(formula) {
 }
 
 wdkll_fit_pdf <- function(xt, yt, x, y, nw_kernel, nw_h, pdf_kernel, h0, init = 0, eps = 1e-5, iter = 1000) {
-  ystar <- pdf_kernel(y - yt, h0)
-  ystar0 <- pdf_kernel(0, h0)
+  ystar <- compute_kernel(y - yt, pdf_kernel, h0)
   # pt using ystar
   pt <- find_weight(xt, x, nw_kernel, nw_h, init, eps, iter)
   # Wct
-  wct <- pt * nw_kernel(x - xt, nw_h) / sum(pt * nw_kernel(x - xt, nw_h))
+  wct <- pt * compute_kernel(x - xt, nw_kernel, nw_h) / sum(pt * compute_kernel(x - xt, nw_kernel, nw_h))
   # fhat
   sum( wct * ystar )
 }
