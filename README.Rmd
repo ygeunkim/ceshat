@@ -15,8 +15,22 @@ options(digits = 3)
 pander::panderOptions("round", 3)
 ```
 
-# `ceshat`
+# ceshat <a href='https://github.com/ygeunkim/ceshat'><img src='man/figures/logo.png' align="right" height="139" /></a>
 
 <!-- [![Build Status](https://travis-ci.org/ygeunkim/ceshat.svg?branch=master)](https://travis-ci.org/ygeunkim/ceshat) -->
 [![Build Status](https://travis-ci.com/ygeunkim/ceshat.svg?branch=master)](https://travis-ci.com/ygeunkim/ceshat)
 [![Codecov test coverage](https://codecov.io/gh/ygeunkim/ceshat/branch/master/graph/badge.svg)](https://codecov.io/gh/ygeunkim/ceshat?branch=master)
+
+## Overview
+
+This is an R package to help the [SKKU nonparametric statistics project](https://github.com/ygeunkim/nonparam-cvar). It is basically based on the paper
+
+[Cai, Z., & Wang, X. (2008). *Nonparametric estimation of conditional VaR and expected shortfall*. Journal of Econometrics, 147(1), 120-130.](https://www.sciencedirect.com/science/article/abs/pii/S0304407608001292)
+
+## Installation
+
+```{r, eval=FALSE}
+# install.packages("devtools")
+devtools::install_github("ygeunkim/ceshat")
+```
+
