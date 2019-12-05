@@ -8,7 +8,6 @@ wdkll_cvar(
   formula,
   data,
   prob = 0.95,
-  newx,
   nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
   nw_h,
   pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
@@ -26,8 +25,6 @@ wdkll_cvar(
 \item{data}{an optional data to be used.}
 
 \item{prob}{upper tail probability for VaR}
-
-\item{newx}{x to predict. Unless specified, use the \code{data}.}
 
 \item{nw_kernel}{Kernel for weighted nadaraya watson}
 

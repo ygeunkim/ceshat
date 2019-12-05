@@ -58,7 +58,6 @@ wdkll_fit_cdf <- function(xt, yt, x, y, nw_kernel, nw_h, pdf_kernel, h0, init = 
 #' @param formula an object class \link[stats]{formula}.
 #' @param data an optional data to be used.
 #' @param prob upper tail probability for VaR
-#' @param newx x to predict. Unless specified, use the \code{data}.
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW
 #' @param pdf_kernel Kernel for initial estimate of conditinal pdf
@@ -80,7 +79,7 @@ wdkll_fit_cdf <- function(xt, yt, x, y, nw_kernel, nw_h, pdf_kernel, h0, init = 
 #' @import tibble
 #' @importFrom tidyr expand_grid
 #' @export
-wdkll_cvar <- function(formula, data, prob = .95, newx,
+wdkll_cvar <- function(formula, data, prob = .95,
                        nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
                        pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
                        init = 0, eps = 1e-5, iter = 1000,
@@ -88,16 +87,33 @@ wdkll_cvar <- function(formula, data, prob = .95, newx,
   var_name <- find_name(formula)
   yt <- data %>% select(var_name[1]) %>% pull()
   xt <- data %>% select(var_name[2]) %>% pull()
-  if (missing(newx)) newx <- xt
-  uniroot(
-    function(y) {
-      1 -
-        wdkll_cdf(formula, data, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(y, newx) -
-        prob
-    },
-    lower = lower_invert,
-    upper = upper_invert
-  )$root
+  # cvar <-
+  #   uniroot(
+  #     function(y) {
+  #       1 -
+  #         wdkll_cdf(formula, data, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(y, newx) -
+  #         prob
+  #     },
+  #     lower = lower_invert,
+  #     upper = upper_invert
+  #   )$root
+  cvar <- function(x) {
+    uniroot(
+      function(y) {
+        1 -
+          wdkll_cdf(formula, data, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(y, x) -
+          prob
+      },
+      lower = lower_invert,
+      upper = upper_invert
+    )$root
+  }
+  result <- list(cvar = cvar)
+  result$right_tail <- prob
+  result$kerel <- c(nw_kernel, pdf_kernel)
+  result$bandwidth <- c(nw_h, h0)
+  result$xt <- xt
+  structure(result, class = "cvar")
 }
 
 #' Weighted Double Kernel Local Linear Estimation of Conditional Expected Shortfall
@@ -107,7 +123,6 @@ wdkll_cvar <- function(formula, data, prob = .95, newx,
 #' @param formula an object class \link[stats]{formula}.
 #' @param data an optional data to be used.
 #' @param prob upper tail probability for VaR
-#' @param newx x to predict. Unless specified, use the \code{data}.
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW
 #' @param pdf_kernel Kernel for initial estimate of conditinal pdf
@@ -124,7 +139,7 @@ wdkll_cvar <- function(formula, data, prob = .95, newx,
 #' @import dplyr
 #' @importFrom stats integrate uniroot
 #' @export
-wdkll_ces <- function(formula, data, prob = .95, newx,
+wdkll_ces <- function(formula, data, prob = .95,
                       nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
                       pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
                       init = 0, eps = 1e-5, iter = 1000,
@@ -132,27 +147,15 @@ wdkll_ces <- function(formula, data, prob = .95, newx,
   var_name <- find_name(formula)
   yt <- data %>% select(var_name[1]) %>% pull()
   xt <- data %>% select(var_name[2]) %>% pull()
-  if (missing(newx)) newx <- xt
-  cvar <- wdkll_cvar(formula, data, prob, newx, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter, lower_invert, upper_invert)
-  gh0 <- compute_gh(cvar - yt, pdf_kernel, h0)
-  pt <- find_weight(xt, newx, nw_kernel, nw_h, init, eps, iter)
-  wh <- compute_kernel(newx - xt, nw_kernel, nw_h)
-  wct <- pt * wh / sum(pt * wh)
-  g1 <-
-    sapply(
-      yt,
-      function(y) {
-        integrate(
-          compute_kernel,
-          lower = cvar - y,
-          upper = Inf,
-          type = pdf_kernel,
-          h = h0,
-          rel.tol = eps
-        )$value
-      }
-    )
-  sum( wct * ( yt * (1 - gh0) + h0 * g1 )) / prob
+  cvar_fit <- wdkll_cvar(formula, data, prob, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter, lower_invert, upper_invert)
+  result <- list(cvar = cvar_fit)
+  result$right_tail <- prob
+  result$xt <- xt
+  result$yt <- yt
+  result$kernel <- c(nw_kernel, pdf_kernel)
+  result$bandwidth <- c(nw_h, h0)
+  result$newton_param <- c(init, eps, iter)
+  structure(result, class = "ces")
 }
 
 
