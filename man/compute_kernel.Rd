@@ -18,7 +18,7 @@ compute_kernel(
 \item{h}{bandwidth}
 }
 \value{
-Gaussian function value given \code{x}
+Kernel function value given \code{x}
 }
 \description{
 Kernel function with bandwidth

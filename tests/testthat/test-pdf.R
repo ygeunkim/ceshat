@@ -4,7 +4,7 @@ test_that(
   "WDKLL estimation of Conditional PDF",
   {
     X <- data.frame(x = 1:10, y = rnorm(10))
-    newX <- data.frame(x = 11:12, y = rnorm(2))
+    newX <- data.frame(x = rep(11, 2), y = rnorm(2))
     fhat <-
       wdkll_pdf(
         y ~ x,

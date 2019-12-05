@@ -5,7 +5,7 @@
 #' using WDKLL method.
 #' @param formula an object class \link[stats]{formula}.
 #' @param data an optional data to be used.
-#' @param newdata data to predict. If \code{NULL}, use the \code{data}.
+#' @param newdata data to predict. Unless specified, use the \code{data}.
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW
 #' @param pdf_kernel Kernel for initial estimate of conditinal pdf
@@ -22,7 +22,7 @@
 #' @import dplyr
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @export
-wdkll_pdf <- function(formula, data, newdata = NULL,
+wdkll_pdf <- function(formula, data, newdata,
                       nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
                       pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
                       init = 0, eps = 1e-5, iter = 1000) {
@@ -31,7 +31,7 @@ wdkll_pdf <- function(formula, data, newdata = NULL,
   xt <- data %>% select(var_name[2]) %>% pull()
   nw_kernel <- match.arg(nw_kernel)
   pdf_kernel <- match.arg(pdf_kernel)
-  if (is.null(newdata)) newdata <- data
+  if (missing(newdata)) newdata <- data
   if (!is.numeric(newdata)) {
     newy <- newdata %>% select(var_name[1]) %>% pull()
     newx <- newdata %>% select(var_name[2]) %>% pull()
@@ -66,8 +66,8 @@ deriv2_log <- function(lambda, xt, x, Kh, h) {
 find_weight <- function(xdata, x, Kh, h, init_lambda = 0, eps = 1e-5, max_iter = 1000) {
   if (!is.numeric(xdata)) stop("xdata should be numeric vector")
   lambda <- init_lambda
-  grad <- 0
-  hess <- 0
+  grad <- numeric(1)
+  hess <- numeric(1)
   for (i in seq_len(max_iter)) {
     grad <- -sum( deriv_log(init_lambda, xdata, x, Kh, h) )
     hess <- -sum( deriv2_log(init_lambda, xdata, x, Kh, h) )
@@ -77,7 +77,7 @@ find_weight <- function(xdata, x, Kh, h, init_lambda = 0, eps = 1e-5, max_iter =
     init_lambda <- lambda
   }
   # pt = 1 / (n * (1 + lambda * (xt - x) * Kh))
-  1 / (length(xdata) * (1 + lambda * (xdata - x) * compute_kernel(x - xdata, Kh, h)))
+  1 / length(xdata) * 1 / (1 + lambda * (xdata - x) * compute_kernel(x - xdata, Kh, h))
 }
 
 find_name <- function(formula) {
