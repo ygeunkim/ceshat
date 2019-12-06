@@ -87,16 +87,6 @@ wdkll_cvar <- function(formula, data, prob = .95,
   var_name <- find_name(formula)
   yt <- data %>% select(var_name[1]) %>% pull()
   xt <- data %>% select(var_name[2]) %>% pull()
-  # cvar <-
-  #   uniroot(
-  #     function(y) {
-  #       1 -
-  #         wdkll_cdf(formula, data, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(y, newx) -
-  #         prob
-  #     },
-  #     lower = lower_invert,
-  #     upper = upper_invert
-  #   )$root
   cvar <- function(x) {
     uniroot(
       function(y) {
@@ -113,7 +103,8 @@ wdkll_cvar <- function(formula, data, prob = .95,
   result$kerel <- c(nw_kernel, pdf_kernel)
   result$bandwidth <- c(nw_h, h0)
   result$xt <- xt
-  structure(result, class = "cvar")
+  class(result) <- "cvar"
+  result
 }
 
 #' Weighted Double Kernel Local Linear Estimation of Conditional Expected Shortfall
@@ -149,15 +140,34 @@ wdkll_ces <- function(formula, data, prob = .95,
   xt <- data %>% select(var_name[2]) %>% pull()
   cvar_fit <- wdkll_cvar(formula, data, prob, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter, lower_invert, upper_invert)
   result <- list(cvar = cvar_fit)
-  result$right_tail <- prob
-  result$xt <- xt
   result$yt <- yt
-  result$kernel <- c(nw_kernel, pdf_kernel)
-  result$bandwidth <- c(nw_h, h0)
   result$newton_param <- c(init, eps, iter)
-  structure(result, class = "ces")
+  class(result) <- "ces"
+  result
 }
 
+# CVaR class-------------------------------
 
+#' `cvar` class
+#'
+#' @description
+#' The \code{cvar} class is a result of \code{\link{wdkll_cvar}}.
+#' @name cvar-class
+#' @rdname cvar-class
+#' @aliases cvar cvar-class
+#' @importFrom methods setOldClass
+#' @exportClass cvar
+setOldClass("cvar")
 
+# CES class--------------------------------
 
+#' `ces` class
+#'
+#' @description
+#' The \code{ces} class is a result of \code{\link{wdkll_ces}}.
+#' @name ces-class
+#' @rdname ces-class
+#' @aliases ces ces-class
+#' @importFrom methods setOldClass
+#' @exportClass ces
+setOldClass("ces")

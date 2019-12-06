@@ -2,29 +2,20 @@
 % Please edit documentation in R/predict_cai.R
 \name{predict.cvar}
 \alias{predict.cvar}
-\alias{predict.ces}
 \title{Predict method for WDKLL cvar}
 \usage{
 \method{predict}{cvar}(object, newx)
-
-\method{predict}{ces}(object, newx)
 }
 \arguments{
-\item{object}{Object of class from \code{\link{wdkll_ces}}}
+\item{object}{Object of class from \code{\link{wdkll_cvar}}}
 
-\item{newx}{x to predict. Unless specified, use the \code{data}.
-Plugging-in in methods gives
-\deqn{\hat{\mu}_p(x) = \frac{1}{p} \sum_{t = 1}^n W_{c,t}(x, h) \left[ Y_t \bar{G}_{h_0} (\hat{\nu}_p (x) - Y_t) + h_0 G_{1, h_0} (\hat{\nu}_p (x) - Y_t) \right]}}
+\item{newx}{x to predict. Unless specified, use the \code{data}.}
 }
 \value{
-CVaR given \code{x}
-
 CVaR given \code{x}
 }
 \description{
 WDKLL values for CVar
-
-WDKLL values for CES
 }
 \details{
 CVaR can be earned by inverting the CDF.
@@ -33,7 +24,5 @@ where
 \deqn{\hat{S}(y \mid x)_c(y \mid x) = 1 - \hat{F}_c(y \mid x)}
 }
 \references{
-Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
-
 Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 }

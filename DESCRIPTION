@@ -15,7 +15,9 @@ Imports:
     stringr,
     dplyr,
     tibble,
-    tidyr
+    tidyr,
+    utils,
+    methods
 Suggests: 
     covr,
     testthat

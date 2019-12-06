@@ -6,16 +6,12 @@
 #' @param newx x to predict. Unless specified, use the \code{data}.
 #' @return
 #' CVaR given \code{x}
-#' @return
-#' CVaR given \code{x}
 #' @details
 #' CVaR can be earned by inverting the CDF.
 #' \deqn{\hat{nu}_p(x) = \hat{S}_c^{-1}(p \mid x)}
 #' where
 #' \deqn{\hat{S}(y \mid x)_c(y \mid x) = 1 - \hat{F}_c(y \mid x)}
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
-#' @importFrom stats predict
-#' @rdname predict
 #' @export
 predict.cvar <- function(object, newx) {
   if (missing(newx)) newx <- object$xt
@@ -29,24 +25,33 @@ predict.cvar <- function(object, newx) {
 #' WDKLL values for CES
 #' @param object Object of class from \code{\link{wdkll_ces}}
 #' @param newx x to predict. Unless specified, use the \code{data}.
+#' @details
 #' Plugging-in in methods gives
 #' \deqn{\hat{\mu}_p(x) = \frac{1}{p} \sum_{t = 1}^n W_{c,t}(x, h) \left[ Y_t \bar{G}_{h_0} (\hat{\nu}_p (x) - Y_t) + h_0 G_{1, h_0} (\hat{\nu}_p (x) - Y_t) \right]}
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
-#' @importFrom stats integrate uniroot predict
-#' @rdname predict
+#' @importFrom stats integrate uniroot
 #' @export
 predict.ces <- function(object, newx) {
-  xt <- object$xt
+  sapply(
+    newx,
+    function(x) {
+      predict_ces(object, x)
+    }
+  )
+}
+
+predict_ces <- function(object, newx) {
+  cvar_fit <- object$cvar
+  xt <- cvar_fit$xt
   yt <- object$yt
-  prob <- object$right_tail
-  nw_kernel <- object$kernel[1]
-  nw_h <- object$bandwidth[1]
-  pdf_kernel <- object$kernel[2]
-  h0 <- object$bandwidth[2]
+  prob <- cvar_fit$right_tail
+  nw_kernel <- cvar_fit$kernel[1]
+  nw_h <- cvar_fit$bandwidth[1]
+  pdf_kernel <- cvar_fit$kernel[2]
+  h0 <- cvar_fit$bandwidth[2]
   init <- object$newton_param[1]
   eps <- object$newton_param[2]
   iter <- object$newton_param[3]
-  cvar_fit <- object$cvar
   cvar <- predict(cvar_fit, newx)
   gh0 <- compute_gh(cvar - yt, pdf_kernel, h0)
   g1h <- function(x) {
@@ -64,7 +69,7 @@ predict.ces <- function(object, newx) {
         )$value
       }
     )
-  if (missing(newx)) newx <- object$xt
+  if (missing(newx)) newx <- xt
   pt <- find_weight(xt, newx, nw_kernel, nw_h, init, eps, iter)
   wh <- compute_kernel(newx - xt, nw_kernel, nw_h)
   wct <- pt * wh / sum(pt * wh)
