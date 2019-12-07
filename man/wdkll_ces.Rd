@@ -28,11 +28,11 @@ wdkll_ces(
 
 \item{nw_kernel}{Kernel for weighted nadaraya watson}
 
-\item{nw_h}{Bandwidth for WNW}
+\item{nw_h}{Bandwidth for WNW. If not specified, use the asymptotic optimal.}
 
 \item{pdf_kernel}{Kernel for initial estimate of conditinal pdf}
 
-\item{h0}{Bandwidth for pdf kernel}
+\item{h0}{Bandwidth for pdf kernel. If not specified, use 10 times of asymptotic optimal for \code{nw_h}.}
 
 \item{init}{initial value for finding lambda}
 

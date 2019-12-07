@@ -1,12 +1,8 @@
-#' ceshat: Nonparametric estmation of Conditional ES
-#'
-#' @description
+#' @aliases ceshat ceshat-package
+#' @details
 #' ceshat provides estimation functions for CVaR and CES.
-#' @docType package
-#' @name ceshat-package
-#' @aliases ceshat
-#' @author Young-geun Kim <\url{https://github.com/ygeunkim}>
-#' @importFrom stats predict
+#' @importFrom stats predict AIC
+#' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @keywords internal
 "_PACKAGE"
 

@@ -5,7 +5,6 @@
 #' using WDKLL method.
 #' @param formula an object class \link[stats]{formula}.
 #' @param data an optional data to be used.
-#' @param newdata data to predict. Unless specified, use the \code{data}.
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW
 #' @param pdf_kernel Kernel for initial estimate of conditinal pdf
@@ -14,7 +13,7 @@
 #' @param eps small value
 #' @param iter maximum iteration when finding lambda
 #' @return
-#' Conditional pdf values for each x
+#' Conditional pdf function of \code{(y, x)}. \code{y} can be a numeric vector.
 #' @details
 #' Since standalone LL or WNW does not fully satisfy the conditions of cdf,
 #' Cai et al (2008) proposed to use WNW in LL scheme.
@@ -22,7 +21,7 @@
 #' @import dplyr
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @export
-wdkll_pdf <- function(formula, data, newdata,
+wdkll_pdf <- function(formula, data,
                       nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
                       pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
                       init = 0, eps = 1e-5, iter = 1000) {
@@ -31,21 +30,12 @@ wdkll_pdf <- function(formula, data, newdata,
   xt <- data %>% select(var_name[2]) %>% pull()
   nw_kernel <- match.arg(nw_kernel)
   pdf_kernel <- match.arg(pdf_kernel)
-  if (missing(newdata)) newdata <- data
-  if (!is.numeric(newdata)) {
-    newy <- newdata %>% select(var_name[1]) %>% pull()
-    newx <- newdata %>% select(var_name[2]) %>% pull()
-    sapply(
-      1:length(newy),
-      function(i) {
-        wdkll_fit_pdf(xt, yt, newx[i], newy[i], nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
-      }
-    )
-  } else {
-    newy <- newdata[var_name[1]]
-    newx <- newdata[var_name[2]]
-    wdkll_fit_pdf(xt, yt, newx, newy, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
-  }
+  Vectorize(
+    function(y, x) {
+      wdkll_fit_pdf(xt, yt, x, y, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+    },
+    vectorize.args = "y"
+  )
 }
 
 emp_log <- function(lambda, xt, x, Kh, h) {
@@ -92,7 +82,8 @@ wdkll_fit_pdf <- function(xt, yt, x, y, nw_kernel, nw_h, pdf_kernel, h0, init = 
   # pt using ystar
   pt <- find_weight(xt, x, nw_kernel, nw_h, init, eps, iter)
   # Wct
-  wct <- pt * compute_kernel(x - xt, nw_kernel, nw_h) / sum(pt * compute_kernel(x - xt, nw_kernel, nw_h))
+  wh <- compute_kernel(x - xt, nw_kernel, nw_h)
+  wct <- pt * wh / sum(pt * wh)
   # fhat
   sum( wct * ystar )
 }

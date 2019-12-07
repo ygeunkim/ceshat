@@ -64,8 +64,9 @@ predict_ces <- function(object, newx) {
         integrate(
           g1h,
           lower = cvar - y,
-          upper = 1e+5,
-          rel.tol = eps
+          upper = Inf,
+          rel.tol = eps,
+          abs.tol = eps
         )$value
       }
     )

@@ -7,7 +7,6 @@
 wdkll_pdf(
   formula,
   data,
-  newdata,
   nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
   nw_h,
   pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
@@ -21,8 +20,6 @@ wdkll_pdf(
 \item{formula}{an object class \link[stats]{formula}.}
 
 \item{data}{an optional data to be used.}
-
-\item{newdata}{data to predict. Unless specified, use the \code{data}.}
 
 \item{nw_kernel}{Kernel for weighted nadaraya watson}
 
@@ -39,7 +36,7 @@ wdkll_pdf(
 \item{iter}{maximum iteration when finding lambda}
 }
 \value{
-Conditional pdf values for each x
+Conditional pdf function of \code{(y, x)}. \code{y} can be a numeric vector.
 }
 \description{
 This function estimates conditional pdf
