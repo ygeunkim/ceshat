@@ -15,8 +15,8 @@ wdkll_ces(
   init = 0,
   eps = 1e-05,
   iter = 1000,
-  lower_invert = -50,
-  upper_invert = 50
+  lower_invert = -3,
+  upper_invert = 3
 )
 }
 \arguments{

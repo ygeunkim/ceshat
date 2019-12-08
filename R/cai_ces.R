@@ -5,6 +5,7 @@
 #' using WDKLL method.
 #' @param formula an object class \link[stats]{formula}.
 #' @param data an optional data to be used.
+#' @param wt weights for WNW. Computing in prediction step will help efficiency.
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW
 #' @param pdf_kernel Kernel for initial estimate of conditinal pdf
@@ -14,16 +15,12 @@
 #' @param iter maximum iteration when finding lambda
 #' @return
 #' Conditional CDF function with argument \code{y} and \code{x}
-#' @examples
-#' X <- data.frame(x = 1:10, y = rnorm(10))
-#' wdkll_cdf(y ~ x, X, nw_h = 1, h0 = 1)(1, 1)
-#' wdkll_cdf(y ~ x, X, nw_h = 1, h0 = 1)(2, 1)
 #' @details
 #' \deqn{\hat{F}_c(y \mid x) = \sum_{t = 1}^n W_{c,t} G_{h_0} (y - Y_t)}
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @import dplyr
 #' @export
-wdkll_cdf <- function(formula, data,
+wdkll_cdf <- function(formula, data, wt,
                       nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
                       pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
                       init = 0, eps = 1e-5, iter = 1000) {
@@ -34,21 +31,35 @@ wdkll_cdf <- function(formula, data,
   pdf_kernel <- match.arg(pdf_kernel)
   Vectorize(
     function(y, x) {
-      wdkll_fit_cdf(xt, yt, x, y, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+      wdkll_fit_cdf(xt, yt, x, y, wt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
     },
     vectorize.args = "y"
   )
 }
 
-wdkll_fit_cdf <- function(xt, yt, x, y, nw_kernel, nw_h, pdf_kernel, h0, init = 0, eps = 1e-5, iter = 1000) {
+wdkll_fit_cdf <- function(xt, yt, x, y, pt, nw_kernel, nw_h, pdf_kernel, h0, init = 0, eps = 1e-5, iter = 1000) {
   # distribution function of K
   gh0 <- compute_gh(y - yt, pdf_kernel, h0)
   # WNW
-  pt <- find_weight(xt, x, nw_kernel, nw_h, init, eps, iter)
+  # pt <- find_weight(xt, x, nw_kernel, nw_h, init, eps, iter)
   wh <- compute_kernel(x - xt, nw_kernel, nw_h)
   wct <- pt * wh / sum(pt * wh)
   # WDKLL
   sum( wct * gh0 )
+}
+
+wdkll_cdf2 <- function(xt, yt, wt,
+                       nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
+                       pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
+                       init = 0, eps = 1e-5, iter = 1000) {
+  nw_kernel <- match.arg(nw_kernel)
+  pdf_kernel <- match.arg(pdf_kernel)
+  Vectorize(
+    function(y, x) {
+      wdkll_fit_cdf(xt, yt, x, y, wt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+    },
+    vectorize.args = "y"
+  )
 }
 
 #' Weighted Double Kernel Local Linear Estimation of Conditional Value at Risk
@@ -83,31 +94,36 @@ wdkll_cvar <- function(formula, data, prob = .95,
                        nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
                        pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
                        init = 0, eps = 1e-5, iter = 1000,
-                       lower_invert = -50, upper_invert = 50) {
+                       lower_invert = -3, upper_invert = 3) {
   var_name <- find_name(formula)
   yt <- data %>% select(var_name[1]) %>% pull()
   xt <- data %>% select(var_name[2]) %>% pull()
   nw_kernel <- match.arg(nw_kernel)
   pdf_kernel <- match.arg(pdf_kernel)
-  cvar <- function(x) {
-    uniroot(
-      function(y) {
-        1 -
-          wdkll_cdf(formula, data, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(y, x) -
-          prob
-      },
-      lower = lower_invert,
-      upper = upper_invert
-    )$root
-  }
-  result <- list(cvar = cvar)
+  # cvar <- function(x) {
+  #   uniroot(
+  #     function(y) {
+  #       1 -
+  #         wdkll_cdf(formula, data, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(y, x) -
+  #         prob
+  #     },
+  #     lower = lower_invert,
+  #     upper = upper_invert
+  #   )$root
+  # }
+  # result <- list(cvar = cvar)
+  result <- list(cvar = c(lower_invert, upper_invert))
   result$right_tail <- prob
   result$kerel <- c(nw_kernel, pdf_kernel)
   result$bandwidth <- c(nw_h, h0)
+  result$yt <- yt
   result$xt <- xt
+  result$newton_param <- c(init, eps, iter)
   class(result) <- "cvar"
   result
 }
+
+
 
 #' Weighted Double Kernel Local Linear Estimation of Conditional Expected Shortfall
 #'
@@ -136,7 +152,7 @@ wdkll_ces <- function(formula, data, prob = .95,
                       nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
                       pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), h0,
                       init = 0, eps = 1e-5, iter = 1000,
-                      lower_invert = -50, upper_invert = 50) {
+                      lower_invert = -3, upper_invert = 3) {
   var_name <- find_name(formula)
   yt <- data %>% select(var_name[1]) %>% pull()
   xt <- data %>% select(var_name[2]) %>% pull()
@@ -146,8 +162,6 @@ wdkll_ces <- function(formula, data, prob = .95,
   if (missing(h0)) h0 <- 10 * nw_h
   cvar_fit <- wdkll_cvar(formula, data, prob, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter, lower_invert, upper_invert)
   result <- list(cvar = cvar_fit)
-  result$yt <- yt
-  result$newton_param <- c(init, eps, iter)
   class(result) <- "ces"
   result
 }

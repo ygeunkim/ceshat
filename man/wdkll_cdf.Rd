@@ -7,6 +7,7 @@
 wdkll_cdf(
   formula,
   data,
+  wt,
   nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
   nw_h,
   pdf_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
@@ -20,6 +21,8 @@ wdkll_cdf(
 \item{formula}{an object class \link[stats]{formula}.}
 
 \item{data}{an optional data to be used.}
+
+\item{wt}{weights for WNW. Computing in prediction step will help efficiency.}
 
 \item{nw_kernel}{Kernel for weighted nadaraya watson}
 
@@ -44,11 +47,6 @@ using WDKLL method.
 }
 \details{
 \deqn{\hat{F}_c(y \mid x) = \sum_{t = 1}^n W_{c,t} G_{h_0} (y - Y_t)}
-}
-\examples{
-X <- data.frame(x = 1:10, y = rnorm(10))
-wdkll_cdf(y ~ x, X, nw_h = 1, h0 = 1)(1, 1)
-wdkll_cdf(y ~ x, X, nw_h = 1, h0 = 1)(2, 1)
 }
 \references{
 Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
