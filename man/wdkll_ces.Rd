@@ -32,7 +32,7 @@ wdkll_ces(
 
 \item{pdf_kernel}{Kernel for initial estimate of conditinal pdf}
 
-\item{h0}{Bandwidth for pdf kernel. If not specified, use 10 times of asymptotic optimal for \code{nw_h}.}
+\item{h0}{Bandwidth for pdf kernel. If not specified, use 0.1 times of asymptotic optimal for \code{nw_h}.}
 
 \item{init}{initial value for finding lambda}
 

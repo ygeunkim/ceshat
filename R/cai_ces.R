@@ -101,19 +101,7 @@ wdkll_cvar <- function(formula, data, prob = .95,
   nw_kernel <- match.arg(nw_kernel)
   pdf_kernel <- match.arg(pdf_kernel)
   if (missing(nw_h)) nw_h <- length(xt)^(-4 / 5)
-  if (missing(h0)) h0 <- 10 * nw_h
-  # cvar <- function(x) {
-  #   uniroot(
-  #     function(y) {
-  #       1 -
-  #         wdkll_cdf(formula, data, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(y, x) -
-  #         prob
-  #     },
-  #     lower = lower_invert,
-  #     upper = upper_invert
-  #   )$root
-  # }
-  # result <- list(cvar = cvar)
+  if (missing(h0)) h0 <- .1 * nw_h
   result <- list(cvar = c(lower_invert, upper_invert))
   result$right_tail <- prob
   result$kerel <- c(nw_kernel, pdf_kernel)
@@ -137,7 +125,7 @@ wdkll_cvar <- function(formula, data, prob = .95,
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW. If not specified, use the asymptotic optimal.
 #' @param pdf_kernel Kernel for initial estimate of conditinal pdf
-#' @param h0 Bandwidth for pdf kernel. If not specified, use 10 times of asymptotic optimal for \code{nw_h}.
+#' @param h0 Bandwidth for pdf kernel. If not specified, use 0.1 times of asymptotic optimal for \code{nw_h}.
 #' @param init initial value for finding lambda
 #' @param eps small value
 #' @param iter maximum iteration when finding lambda
@@ -161,7 +149,7 @@ wdkll_ces <- function(formula, data, prob = .95,
   nw_kernel <- match.arg(nw_kernel)
   pdf_kernel <- match.arg(pdf_kernel)
   if (missing(nw_h)) nw_h <- length(xt)^(-4 / 5)
-  if (missing(h0)) h0 <- 10 * nw_h
+  if (missing(h0)) h0 <- .1 * nw_h
   cvar_fit <- wdkll_cvar(formula, data, prob, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter, lower_invert, upper_invert)
   result <- list(cvar = cvar_fit)
   class(result) <- "ces"

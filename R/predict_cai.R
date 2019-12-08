@@ -15,8 +15,6 @@
 #' @export
 predict.cvar <- function(object, newx) {
   if (missing(newx)) newx <- object$xt
-  # cvar <- Vectorize(object$cvar, vectorize.args = "x")
-  # cvar(newx)
   xt <- object$xt
   yt <- object$yt
   prob <- object$right_tail
@@ -27,11 +25,16 @@ predict.cvar <- function(object, newx) {
   init <- object$newton_param[1]
   eps <- object$newton_param[2]
   iter <- object$newton_param[3]
-  # find_cvar <- seq(object$cvar[1], object$cvar[2], by = .01)
-  pt <- find_weight(xt, newx, nw_kernel, nw_h, init, eps, iter)
-  # loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(find_cvar, newx)
-  pred_cvar <- Vectorize(predict_cvar, vectorize.args = "newx")
-  pred_cvar(object, newx, prob, xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+  # pt <- find_weight(xt, newx, nw_kernel, nw_h, init, eps, iter)
+  pt <- find_pt(xt, newx, nw_kernel, nw_h, init, eps, iter)
+  # pred_cvar <- Vectorize(predict_cvar, vectorize.args = "newx")
+  # pred_cvar(object, newx, prob, xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+  sapply(
+    1:length(newx),
+    function(i) {
+      predict_cvar(object, newx[i], prob, xt, yt, pt[,i], nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+    }
+  )
 }
 
 predict_cvar <- function(object, newx, prob,
@@ -41,7 +44,14 @@ predict_cvar <- function(object, newx, prob,
                          init, eps, iter) {
   find_cvar <- seq(object$cvar[1], object$cvar[2], by = .01)
   loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(find_cvar, newx)
-  min(find_cvar[loss >= 1 - prob])
+  cand <- find_cvar[loss >= 1 - prob]
+  if (length(cand) > 0) {
+    return(min(cand))
+  } else {
+    find_cvar <- seq(object$cvar[1] - 3, object$cvar[2] + 3, by = .01)
+    loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(find_cvar, newx)
+    min(find_cvar[loss >= 1 - prob])
+  }
 }
 
 #' Predict method for WDKLL ces
@@ -68,11 +78,12 @@ predict.ces <- function(object, newx) {
   init <- cvar_fit$newton_param[1]
   eps <- cvar_fit$newton_param[2]
   iter <- cvar_fit$newton_param[3]
-  pt <- find_weight(xt, newx, nw_kernel, nw_h, init, eps, iter)
+  # pt <- find_weight(xt, newx, nw_kernel, nw_h, init, eps, iter)
+  pt <- find_pt(xt, newx, nw_kernel, nw_h, init, eps, iter)
   sapply(
-    newx,
-    function(x) {
-      predict_ces(object, x, prob, xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+    1:length(newx),
+    function(i) {
+      predict_ces(object, newx[i], prob, xt, yt, pt[,i], nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
     }
   )
 }

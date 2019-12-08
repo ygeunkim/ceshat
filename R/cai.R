@@ -70,6 +70,8 @@ find_weight <- function(xdata, x, Kh, h, init_lambda = 0, eps = 1e-5, max_iter =
   1 / length(xdata) * 1 / (1 + lambda * (xdata - x) * compute_kernel(x - xdata, Kh, h))
 }
 
+find_pt <- Vectorize(find_weight, vectorize.args = "x")
+
 find_name <- function(formula) {
   formula %>%
     deparse() %>%
