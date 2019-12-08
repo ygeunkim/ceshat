@@ -100,6 +100,8 @@ wdkll_cvar <- function(formula, data, prob = .95,
   xt <- data %>% select(var_name[2]) %>% pull()
   nw_kernel <- match.arg(nw_kernel)
   pdf_kernel <- match.arg(pdf_kernel)
+  if (missing(nw_h)) nw_h <- length(xt)^(-4 / 5)
+  if (missing(h0)) h0 <- 10 * nw_h
   # cvar <- function(x) {
   #   uniroot(
   #     function(y) {

@@ -41,7 +41,7 @@ predict_cvar <- function(object, newx, prob,
                          init, eps, iter) {
   find_cvar <- seq(object$cvar[1], object$cvar[2], by = .01)
   loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(find_cvar, newx)
-  min(which( loss >= 1 - prob ))
+  min(find_cvar[loss >= 1 - prob])
 }
 
 #' Predict method for WDKLL ces
