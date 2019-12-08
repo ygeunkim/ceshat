@@ -27,10 +27,21 @@ predict.cvar <- function(object, newx) {
   init <- object$newton_param[1]
   eps <- object$newton_param[2]
   iter <- object$newton_param[3]
-  find_cvar <- seq(object$cvar[1], object$cvar[2], by = .01)
+  # find_cvar <- seq(object$cvar[1], object$cvar[2], by = .01)
   pt <- find_weight(xt, newx, nw_kernel, nw_h, init, eps, iter)
+  # loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(find_cvar, newx)
+  pred_cvar <- Vectorize(predict_cvar, vectorize.args = "newx")
+  pred_cvar(object, newx, prob, xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+}
+
+predict_cvar <- function(object, newx, prob,
+                         xt, yt, pt,
+                         nw_kernel, nw_h,
+                         pdf_kernel, h0,
+                         init, eps, iter) {
+  find_cvar <- seq(object$cvar[1], object$cvar[2], by = .01)
   loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(find_cvar, newx)
-  min(which(loss >= 1 - prob))
+  min(which( loss >= 1 - prob ))
 }
 
 #' Predict method for WDKLL ces
@@ -61,27 +72,17 @@ predict.ces <- function(object, newx) {
   sapply(
     newx,
     function(x) {
-      predict_ces(object, x, xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
+      predict_ces(object, x, prob, xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
     }
   )
 }
 
-predict_ces <- function(object, newx,
+predict_ces <- function(object, newx, prob,
                         xt, yt, pt,
                         nw_kernel, nw_h,
                         pdf_kernel, h0,
                         init, eps, iter) {
   cvar_fit <- object$cvar
-  xt <- cvar_fit$xt
-  yt <- cvar_fit$yt
-  prob <- cvar_fit$right_tail
-  nw_kernel <- cvar_fit$kernel[1]
-  nw_h <- cvar_fit$bandwidth[1]
-  pdf_kernel <- cvar_fit$kernel[2]
-  h0 <- cvar_fit$bandwidth[2]
-  init <- cvar_fit$newton_param[1]
-  eps <- cvar_fit$newton_param[2]
-  iter <- cvar_fit$newton_param[3]
   cvar <- predict(cvar_fit, newx)
   gh0 <- compute_gh(cvar - yt, pdf_kernel, h0)
   g1h <- function(x) {
