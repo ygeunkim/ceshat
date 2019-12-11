@@ -4,6 +4,7 @@
 #' WDKLL values for CVar
 #' @param object Object of class from \code{\link{wdkll_cvar}}
 #' @param newx x to predict. Unless specified, use the \code{data}.
+#' @param ... further arguments passed to or from other methods.
 #' @return
 #' CVaR given \code{x}
 #' @details
@@ -13,7 +14,7 @@
 #' \deqn{\hat{S}(y \mid x)_c(y \mid x) = 1 - \hat{F}_c(y \mid x)}
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @export
-predict.cvar <- function(object, newx) {
+predict.cvar <- function(object, newx, ...) {
   if (missing(newx)) newx <- object$xt
   xt <- object$xt
   yt <- object$yt
@@ -60,13 +61,14 @@ predict_cvar <- function(object, newx, prob,
 #' WDKLL values for CES
 #' @param object Object of class from \code{\link{wdkll_ces}}
 #' @param newx x to predict. Unless specified, use the \code{data}.
+#' @param ... further arguments passed to or from other methods.
 #' @details
 #' Plugging-in in methods gives
 #' \deqn{\hat{\mu}_p(x) = \frac{1}{p} \sum_{t = 1}^n W_{c,t}(x, h) \left[ Y_t \bar{G}_{h_0} (\hat{\nu}_p (x) - Y_t) + h_0 G_{1, h_0} (\hat{\nu}_p (x) - Y_t) \right]}
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @importFrom stats integrate uniroot
 #' @export
-predict.ces <- function(object, newx) {
+predict.ces <- function(object, newx, ...) {
   cvar_fit <- object$cvar
   xt <- cvar_fit$xt
   yt <- cvar_fit$yt

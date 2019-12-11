@@ -4,12 +4,14 @@
 \alias{predict.ces}
 \title{Predict method for WDKLL ces}
 \usage{
-\method{predict}{ces}(object, newx)
+\method{predict}{ces}(object, newx, ...)
 }
 \arguments{
 \item{object}{Object of class from \code{\link{wdkll_ces}}}
 
 \item{newx}{x to predict. Unless specified, use the \code{data}.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \description{
 WDKLL values for CES

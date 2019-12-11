@@ -4,12 +4,14 @@
 \alias{predict.cvar}
 \title{Predict method for WDKLL cvar}
 \usage{
-\method{predict}{cvar}(object, newx)
+\method{predict}{cvar}(object, newx, ...)
 }
 \arguments{
 \item{object}{Object of class from \code{\link{wdkll_cvar}}}
 
 \item{newx}{x to predict. Unless specified, use the \code{data}.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 CVaR given \code{x}
