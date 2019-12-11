@@ -62,6 +62,8 @@ wdkll_cdf2 <- function(xt, yt, wt,
   )
 }
 
+# Conditional Value at Risk---------------------------------------------------
+
 #' Weighted Double Kernel Local Linear Estimation of Conditional Value at Risk
 #'
 #' @description
@@ -113,7 +115,7 @@ wdkll_cvar <- function(formula, data, prob = .95,
   result
 }
 
-
+# Conditional Expected Shortfall---------------------------------------------------
 
 #' Weighted Double Kernel Local Linear Estimation of Conditional Expected Shortfall
 #'
@@ -136,7 +138,7 @@ wdkll_cvar <- function(formula, data, prob = .95,
 #' \deqn{\hat{\mu}_p(x) = \frac{1}{p} \sum_{t = 1}^n W_{c,t}(x, h) \left[ Y_t \bar{G}_{h_0} (\hat{\nu}_p (x) - Y_t) + h_0 G_{1, h_0} (\hat{\nu}_p (x) - Y_t) \right]}
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @import dplyr
-#' @importFrom stats integrate uniroot
+#' @importFrom stats integrate
 #' @export
 wdkll_ces <- function(formula, data, prob = .95,
                       nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,

@@ -66,7 +66,7 @@ predict_cvar <- function(object, newx, prob,
 #' Plugging-in in methods gives
 #' \deqn{\hat{\mu}_p(x) = \frac{1}{p} \sum_{t = 1}^n W_{c,t}(x, h) \left[ Y_t \bar{G}_{h_0} (\hat{\nu}_p (x) - Y_t) + h_0 G_{1, h_0} (\hat{\nu}_p (x) - Y_t) \right]}
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
-#' @importFrom stats integrate uniroot
+#' @importFrom stats integrate
 #' @export
 predict.ces <- function(object, newx, ...) {
   cvar_fit <- object$cvar
