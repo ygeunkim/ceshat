@@ -29,21 +29,22 @@ invert_cdf <- function(p = .95, cdf, x, lower = -1, upper = 1) {
   y_grid <- seq(lower, upper, by = .01)
   cand <- explore_grid(y_grid, p, cdf, x)
   if (length(cand) > 0) {
-    if (cand > lower) {
-      return(cand)
+    if (min(cand) > lower) {
+      return(min(cand))
     } else {
       y_grid <- seq(lower - 5, upper, by = .01)
-      return(explore_grid(y_grid, p, cdf, x))
+      return(min(explore_grid(y_grid, p, cdf, x)))
     }
   } else {
     y_grid <- seq(lower, upper + 5, by = .01)
-    return(explore_grid(y_grid, p, cdf, x))
+    return(min(explore_grid(y_grid, p, cdf, x)))
   }
 }
 
 explore_grid <- function(grids, p, cdf, x) {
   loss <- cdf(grids, x)
-  min(grids[loss >= 1 - p])
+  grids[loss >= 1 - p]
+  # min(grids[loss >= 1 - p])
 }
 
 #' Plug-in Method

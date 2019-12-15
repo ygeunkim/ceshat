@@ -106,7 +106,7 @@ wdkll_cvar <- function(formula, data, prob = .95,
   if (missing(h0)) h0 <- .1 * nw_h
   result <- list(cvar = c(lower_invert, upper_invert))
   result$right_tail <- prob
-  result$kerel <- c(nw_kernel, pdf_kernel)
+  result$kernel <- c(nw_kernel, pdf_kernel)
   result$bandwidth <- c(nw_h, h0)
   result$yt <- yt
   result$xt <- xt
