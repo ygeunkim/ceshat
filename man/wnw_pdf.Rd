@@ -10,6 +10,7 @@ wnw_pdf(
   wt,
   nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
   nw_h,
+  h0,
   init = 0,
   eps = 1e-05,
   iter = 1000

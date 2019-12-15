@@ -10,6 +10,7 @@ wnw_ces(
   prob = 0.95,
   nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"),
   nw_h,
+  h0,
   init = 0,
   eps = 1e-05,
   iter = 1000,
@@ -27,6 +28,8 @@ wnw_ces(
 \item{nw_kernel}{Kernel for weighted nadaraya watson}
 
 \item{nw_h}{Bandwidth for WNW. If not specified, use the asymptotic optimal.}
+
+\item{h0}{Binwidth}
 
 \item{init}{initial value for finding lambda}
 

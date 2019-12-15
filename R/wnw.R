@@ -21,7 +21,7 @@
 #' @references Cai, Z., & Wang, X. (2008). \emph{Nonparametric estimation of conditional VaR and expected shortfall}. Journal of Econometrics, 147(1), 120-130.
 #' @export
 wnw_pdf <- function(formula, data, wt,
-                      nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
+                      nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h, h0,
                       init = 0, eps = 1e-5, iter = 1000) {
   var_name <- find_name(formula)
   yt <- data %>% select(var_name[1]) %>% pull()
@@ -29,26 +29,26 @@ wnw_pdf <- function(formula, data, wt,
   nw_kernel <- match.arg(nw_kernel)
   Vectorize(
     function(y, x) {
-      wnw_fit_pdf(xt, yt, x, y, wt, nw_kernel, nw_h, init, eps, iter)
+      wnw_fit_pdf(xt, yt, x, y, wt, nw_kernel, nw_h, h0, init, eps, iter)
     },
     vectorize.args = "y"
   )
 }
 
-wnw_fit_pdf <- function(xt, yt, x, y, pt, nw_kernel, nw_h, init = 0, eps = 1e-5, iter = 1000) {
+wnw_fit_pdf <- function(xt, yt, x, y, pt, nw_kernel, nw_h, h0, init = 0, eps = 1e-5, iter = 1000) {
   wh <- compute_kernel(x - xt, nw_kernel, nw_h)
   wct <- pt * wh / sum(pt * wh)
   # fhat
-  sum( wct * (yt == y) )
+  mean( wct * (abs(y - yt) / h0 <= 1) )
 }
 
 wnw_fit_pdf2 <- function(xt, yt, wt,
-                         nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
+                         nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h, h0,
                          init = 0, eps = 1e-5, iter = 1000) {
   nw_kernel <- match.arg(nw_kernel)
   Vectorize(
     function(y, x) {
-      wnw_fit_pdf(xt, yt, x, y, wt, nw_kernel, nw_h, init, eps, iter)
+      wnw_fit_pdf(xt, yt, x, y, wt, nw_kernel, nw_h, h0, init, eps, iter)
     },
     vectorize.args = "y"
   )
@@ -183,7 +183,7 @@ predict.nwcvar <- function(object, newx, nw = FALSE, ...) {
   eps <- object$newton_param[2]
   iter <- object$newton_param[3]
   if (nw) {
-    pt <- rep(1, length(xt))
+    pt <- matrix(rep(1, length(xt) * length(newx)), ncol = length(newx))
   } else {
     pt <- find_pt(xt, newx, nw_kernel, nw_h, init, eps, iter)
   }
@@ -226,6 +226,7 @@ predict_nwcvar <- function(object, newx, prob,
 #' @param prob upper tail probability for VaR
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW. If not specified, use the asymptotic optimal.
+#' @param h0 Binwidth
 #' @param init initial value for finding lambda
 #' @param eps small value
 #' @param iter maximum iteration when finding lambda
@@ -239,7 +240,7 @@ predict_nwcvar <- function(object, newx, prob,
 #' @importFrom stats integrate
 #' @export
 wnw_ces <- function(formula, data, prob = .95,
-                      nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h,
+                      nw_kernel = c("Gaussian", "Epanechinikov", "Tricube", "Boxcar"), nw_h, h0,
                       init = 0, eps = 1e-5, iter = 1000,
                       lower_invert = -3, upper_invert = 3) {
   var_name <- find_name(formula)
@@ -249,6 +250,7 @@ wnw_ces <- function(formula, data, prob = .95,
   if (missing(nw_h)) nw_h <- length(xt)^(-4 / 5)
   cvar_fit <- wnw_cvar(formula, data, prob, nw_kernel, nw_h, init, eps, iter, lower_invert, upper_invert)
   result <- list(cvar = cvar_fit)
+  result$bin <- h0
   class(result) <- "nwces"
   result
 }
@@ -269,35 +271,63 @@ wnw_ces <- function(formula, data, prob = .95,
 #' @export
 predict.nwces <- function(object, newx, nw = FALSE, ...) {
   cvar_fit <- object$cvar
-  # cvar <- predict(cvar_fit, newx)
+  cvar <- predict(cvar_fit, newx)
   xt <- cvar_fit$xt
   yt <- cvar_fit$yt
   prob <- cvar_fit$right_tail
   nw_kernel <- cvar_fit$kernel
   nw_h <- cvar_fit$bandwidth
+  h0 <- object$bin
   init <- cvar_fit$newton_param[1]
   eps <- cvar_fit$newton_param[2]
   iter <- cvar_fit$newton_param[3]
   if (nw) {
-    pt <- rep(1, length(xt))
+    pt <- matrix(rep(1, length(xt) * length(newx)), ncol = length(newx))
   } else {
     pt <- find_pt(xt, newx, nw_kernel, nw_h, init, eps, iter)
   }
-  fhat <- wnw_fit_pdf2(xt, yt, pt, nw_kernel, nw_h, init, eps, iter)
   sapply(
-    newx,
-    function(x) {
+    1:length(newx),
+    function(i) {
       integrate(
         function(y) {
-          y * fhat(y, x)
+          y * wnw_fit_pdf2(xt, yt, pt[,i], nw_kernel, nw_h, h0, init, eps, iter)(y, newx[i])
         },
-        lower = predict(cvar_fit, x),
+        lower = cvar[i],
         upper = Inf,
         rel.tol = eps,
-        abs.tol = eps
-      )$value
+        abs.tol = eps,
+        subdivisions = 500L
+      )$value / prob
     }
   )
+}
+
+predict_nwces <- function(object, newx, prob,
+                        xt, yt, pt,
+                        nw_kernel, nw_h,
+                        init, eps, iter) {
+  cvar_fit <- object$cvar
+  cvar <- predict(cvar_fit, newx)
+  gh0 <- cvar > yt
+  g1h <- function(x) x^2
+  g1 <-
+    sapply(
+      yt,
+      function(y) {
+        integrate(
+          g1h,
+          lower = cvar - y,
+          upper = 1e+5,
+          rel.tol = eps,
+          abs.tol = eps
+        )$value
+      }
+    )
+  if (missing(newx)) newx <- xt
+  wh <- compute_kernel(newx - xt, nw_kernel, nw_h)
+  wct <- pt * wh / sum(pt * wh)
+  sum( wct * ( yt * gh0 + g1 )) / prob
 }
 
 # CVaR class-------------------------------

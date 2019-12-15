@@ -118,7 +118,8 @@ predict_ces <- function(object, newx, prob,
           lower = cvar - y,
           upper = 1e+5,
           rel.tol = eps,
-          abs.tol = eps
+          abs.tol = eps,
+          subdivisions = 500L
         )$value
       }
     )
