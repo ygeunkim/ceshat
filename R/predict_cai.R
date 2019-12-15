@@ -44,11 +44,11 @@ predict_cvar <- function(object, newx, prob,
                          pdf_kernel, h0,
                          init, eps, iter) {
   find_cvar <- seq(object$cvar[1], object$cvar[2], by = .01)
-  loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)(find_cvar, newx)
+  loss <- wdkll_cdf2(xt, yt, pt, nw_kernel, nw_h, pdf_kernel, h0, init, eps, iter)
   # cand <- find_cvar[loss >= 1 - prob]
   cand <- explore_grid(find_cvar, prob, loss, newx)
   if (length(cand) > 0) {
-    if (cand > object$cvar[1]) {
+    if (min(cand) > object$cvar[1]) {
       return(min(cand))
     } else {
       find_cvar <- seq(object$cvar[1] - 5, object$cvar[2], by = .01)
