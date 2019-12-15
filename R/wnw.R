@@ -8,6 +8,7 @@
 #' @param wt weights for WNW. Computing in prediction step will help efficiency.
 #' @param nw_kernel Kernel for weighted nadaraya watson
 #' @param nw_h Bandwidth for WNW
+#' @param h0 Binwidth
 #' @param init initial value for finding lambda
 #' @param eps small value
 #' @param iter maximum iteration when finding lambda

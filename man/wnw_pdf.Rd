@@ -27,6 +27,8 @@ wnw_pdf(
 
 \item{nw_h}{Bandwidth for WNW}
 
+\item{h0}{Binwidth}
+
 \item{init}{initial value for finding lambda}
 
 \item{eps}{small value}
